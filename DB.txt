@@ -1,0 +1,303 @@
+    
+use Book_Store;
+go
+CREATE TABLE publisher(
+	publisherID   INT IDENTITY(1,1)       PRIMARY KEY  ,
+	title        text         Not Null	   ,
+	email        varchar(30)  UNIQUE       ,
+	phone        int          UNIQUE       ,
+	country      varchar(30)  		       ,
+	city         varchar(20)  		       ,
+	area         varchar(20)   		       ,
+	streat_name  varchar(10)               ,
+	building_no  varchar(10)               
+);
+
+CREATE TABLE book(
+	isbn          int          PRIMARY KEY    					  ,
+	title         text         NOT    Null     					  ,
+	eddition      smallint     DEFAULT 1                          ,
+	pages         smallint                                        ,
+	publish_year  smallint                                        ,
+	sizes         varchar(5)   DEFAULT '3M'                       ,
+	price         decimal      CHECK(price > 0)                   ,
+	publisherID   int          REFERENCES publisher(publisherID)
+);
+
+create table languages(
+	isbn 		int          references book(isbn)          ,
+	languages   varchar(15) 								,
+	constraint 	language_id  primary key(isbn, languages)
+);
+
+CREATE TABLE genra(
+	genraID  INT IDENTITY(1,1)         PRIMARY KEY ,
+	title     varchar(25)   NOT null
+);
+
+CREATE TABLE genra_book(
+	isbn         int 			    references book(isbn)     ON delete CASCADE  ,
+	genraID      int  				references genra(genraID)                    ,
+	constraint   genra_book_id      primary key(isbn, genraID) 
+);
+
+Create table customer(
+	customerID INT IDENTITY(1,1)       primary key	 ,
+	fname       varchar(15)  not null        ,
+	lname       varchar(15)  not null		 ,
+	username    varchar(20)  unique      	 ,
+	email       varchar(20)  unique      	 ,
+	pass  		varchar(15)	 not NULL
+	
+);
+
+create table rate(
+	isbn       		 int     	 references book(isbn)           on delete cascade ,
+	customerID 		 int    	 references customer(customerID) on delete cascade ,
+	given_rate  	 INT 	     check (given_rate <= 5)						   ,
+	rate_Timestamp   datetime   DEFAULT current_Timestamp           		       ,
+	constraint       rate_id  	 primary key (isbn, customerID)
+);
+
+create table payment(
+	paymentID  		INT IDENTITY(1,1)       primary key   									  ,
+	pay_method 		varchar(15) not NULL	  									  ,
+	pay_timestamp   datetime   DEFAULT current_timestamp						  ,
+	amount    		decimal      not NULL			                 			  ,
+	customerID 		int         references customer(customerID) on delete cascade
+);
+
+create table cart(
+	cartID      	   INT IDENTITY(1,1)   	 primary key 					 ,
+	quantity     	   int     		 not NULL					     ,
+	total_price  	   decimal     	 not NULL						 ,
+	cart_Timestamp     datetime     DEFAULT current_Timestamp 		 ,
+	customerID   	   int      	 references customer(customerID) ,
+	paymentID    	   int      	 references payment(paymentID)
+);
+
+create table cart_book(
+	cartID  	int 			   references cart(cartID) on delete cascade 	,
+	isbn    	int 			   references book(isbn)   				        ,
+	constraint  cart_book_id       primary key(isbn, cartID)
+);
+
+create table author(
+	authorID    INT IDENTITY(1,1) 		 primary Key  ,
+	fname       varchar(15) 	 not NULL     ,
+	lname       varchar(20) 	 not NULL     ,
+	country     varchar(30)                   ,
+	birth_date  date					 	  ,
+	sex         varchar(6)
+);
+
+create table author_book(
+	authorID  	 int 				references author(authorID) 					 ,
+	isbn         int 				references book(isbn)       on delete cascade    ,
+	constraint   author_book_id     primary key(authorID, isbn)
+);
+
+create table staff(
+	username   varchar(20) 		primary key ,
+	pass       varchar(15) 		not NULL
+);
+
+create table book_update_info(
+	username    		varchar(20)           references staff(username)   ,
+	isbn       			int                   references book(isbn)        ,
+	constraint  		book_update_info_id   primary key(isbn,username)   ,
+	update_timestamp    datetime            DEFAULT current_timestamp	   ,
+	old_info            text                  							   ,
+	new_info            text                  not NULL
+);
+
+create table author_update_info(
+	username    		varchar(20)      			references staff(username)      ,  
+	authorID     		int              			references author(authorID)     ,
+	constraint   		author_update_info_id		primary key(authorID, username) ,
+	update_timestamp	datetime                  DEFAULT current_timestamp		,
+	new_info            text						
+);
+
+create table supply(
+	username  		 	varchar(20)   	references staff(username) 					   ,
+	publisherID 	 	int 			references publisher(publisherID)			   ,
+	book_name			text						not null						   ,
+	constraint      	supply_id 		primary key(publisherID, username)  ,
+	supply_timestamp	datetime      DEFAULT current_timestamp					   ,
+	commission			int 			check(commission > 0) 				
+);
+
+
+
+--insert publisher data
+insert into publisher(title, email, phone, country, city, area, streat_name, building_no)
+values('publisher1', 'pub1@gmail.com', '1111', 'country1', 'city1', 'area1', 'streat1', '1')   , 
+	  ('publisher2', 'pub2@gmail.com', '2222', 'country2', 'city2', 'area2', 'streat2', '2')   ,
+	  ('publisher3', 'pub3@gmail.com', '3333', 'country3', 'city3', 'area3', 'streat3', '3')   ,
+	  ('publisher4', 'pub4@gmail.com', '4444', 'country4', 'city4', 'area4', 'streat4', '4')   ;
+
+--insert book data
+insert into book (isbn, title, pages, publish_year, price, publisherID)
+values('00100100', 'book1', '200', '2007', '4.2', '1')   ,
+	  ('00200200', 'book2', '100', '2002', '5.4', '4')   ,
+	  ('00300300', 'book3', '250', '2006', '6.8', '3')   ,
+	  ('00400400', 'book4', '150', '2010', '8.1', '2')   ,
+	  ('00500500', 'book5', '170', '2011', '10.5', '1')  ,
+	  ('00600600', 'book6', '300', '2008', '9.6', '3')   ,
+	  ('00700700', 'book7', '320', '2005', '15.7', '4')  ,
+	  ('00800800', 'book8', '190', '2013', '8.3', '2')   ,
+	  ('00900900', 'book9', '290', '2015', '15.9', '1')  ;
+
+--insert language data
+insert into languages (languages, isbn)
+values('Arabic', '00100100')  ,
+	  ('Arabic', '00200200')  ,
+	  ('English', '00300300') ,
+	  ('Arabic', '00400400')  ,
+	  ('English', '00500500') ,
+	  ('Arabic', '00600600')  ,
+	  ('English', '00700700') ,
+	  ('Arabic', '00800800')  ,
+	  ('English', '00900900') ,
+	  ('Arabic', '00700700')  ,
+	  ('Arabic', '00300300')  ,
+	  ('English', '00400400') ,
+	  ('Arabic', '00500500')  ,
+	  ('English', '00600600') ;
+
+--insert genra data
+insert into genra(title)
+values('sci-fi')    ,
+	  ('History') 	,
+	  ('Math')		,
+	  ('Philosophy'),
+	  ('science')	,
+	  ('Noval')		;
+
+
+--insert genra_book data
+insert into genra_book(genraID, isbn)
+values('1','00100100') ,
+	  ('5','00200200') ,
+	  ('3','00200200') ,
+	  ('6','00300300') ,
+	  ('4','00400400') ,
+	  ('2','00500500') ,
+	  ('6','00600600') ,
+	  ('4','00700700') ,
+	  ('5','00800800') ,
+	  ('4','00900900') ,
+	  ('3','00900900') ;
+	  
+--insert customer data
+insert into customer(fname, lname, username, email, pass)
+values('fname1', 'lname1', 'customer1', 'cust1@gmail.com', '1111') ,
+	  ('fname2', 'lname2', 'customer2', 'cust2@gmail.com', '2222') ,
+	  ('fname3', 'lname3', 'customer3', 'cust3@gmail.com', '3333') , 
+	  ('fname4', 'lname4', 'customer4', 'cust4@gmail.com', '4444') ,
+	  ('fname5', 'lname5', 'customer5', 'cust5@gmail.com', '5555') ,
+	  ('fname6', 'lname6', 'customer6', 'cust6@gmail.com', '6666') ,
+	  ('fname7', 'lname7', 'customer7', 'cust7@gmail.com', '7777') ,
+	  ('fname8', 'lname8', 'customer8', 'cust8@gmail.com', '8888') ,
+	  ('fname9', 'lname9', 'customer9', 'cust9@gmail.com', '9999') ;
+
+--insert payment data
+insert into payment(pay_Method, amount, customerID)
+values('visa','5.8', '1' )  ,
+	  ('visa','10.5', '2' ) ,
+	  ('visa','7.9', '3' )  ,
+	  ('visa ','4.2', '5' ) ,
+	  ('visa', '15.2', '4') ;
+
+--insert rate data
+insert into rate(isbn, customerID, given_rate)
+values('00100100', '1', '3')  ,
+	  ('00300300', '9', '2')  ,
+	  ('00500500', '8', '5')  ,
+	  ('00700700', '1', '2')  ,
+	  ('00100100', '2', '3')  ,
+	  ('00900900', '3', '2')  ,
+	  ('00800800', '6', '4')  ;
+	  
+--insert cart date 
+insert into cart(Quantity, Total_price, customerID, paymentId)
+values('3', '15.2', '4', '4'),
+	  ('2', '10.5', '2', '2'),
+	  ('1', '5.8', '4', '1') ,
+	  ('1', '7.9', '4', '3') ;
+
+--insert cart_book data
+insert into cart_book (isbn, cartID)
+values('00100100','1') ,
+	  ('00300300','2') ,
+	  ('00900900','4') ,
+	  ('00600600','3') ,
+	  ('00500500','2') ,
+	  ('00900900','1') ;
+
+--insert author data
+insert into author(fname, lname, country, birth_date, sex)
+values('fname1', 'lname1', 'country1', '1958-12-15', 'Female') ,
+	  ('fname2', 'lname2', 'country2', '1900-8-1', 'Male')     ,
+	  ('fname3', 'lname3', 'country2', '1865-5-3', 'Male')     ,
+	  ('fname4', 'lname4', 'country3', '1844-7-9', 'Male')     ,
+	  ('fname5', 'lname5', 'country4', '1750-3-6', 'Male')     ,
+	  ('fname6', 'lname6', 'country5', '1970-2-4', 'Female')   ,
+	  ('fname7', 'lname7', 'country6', '1870-11-20', 'Male')   ,
+	  ('fname8', 'lname8', 'country8', '1988-10-19', 'Female') ,
+	  ('fnamE9', 'lname9', 'country9', '1600-3-13', 'Female')  ;
+
+--insert author_book data
+insert into author_book(isbn, authorID)
+values('00100100','9')  ,
+	  ('00200200','8')  ,
+	  ('00300300','7')  ,
+	  ('00400400','6')  ,
+	  ('00500500','5')  ,
+	  ('00600600','4')  ,
+	  ('00700700','3')  ,
+	  ('00800800','2')  ,
+	  ('00900900','1')  ;
+	  
+--insert staff data
+insert into staff(username, pass)
+values('staff1','1111') ,
+	  ('staff2','2222') ,
+	  ('staff3','3333') ,
+	  ('staff4','4444') ,
+	  ('staff5','5555') ,
+	  ('staff6','6666') ,
+	  ('staff7','7777') ,
+	  ('staff8','8888') ,
+	  ('staff9','9999') ;
+
+--insert supply data
+insert into supply(username, publisherid, book_name, commission)
+values('staff1', '1', 'book1', '2') ,
+	  ('staff2', '2', 'book2', '2') ,
+	  ('staff1', '3', 'book3', '2') ,
+	  ('staff3', '4', 'book4', '2') ,
+	  ('staff1', '4', 'book5', '2') ,
+	  ('staff2', '3', 'book6', '2') ,
+	  ('staff3', '3', 'book7', '2') ,
+	  ('staff2', '4', 'book8', '2') ,
+	  ('staff1', '2', 'book9', '2') ;
+
+--insert author_update_info data
+insert into author_update_info(username, authorID, new_info)
+values('staff3', '1', 'Add new author')     ,
+	  ('staff1', '2', 'Update birth_date')  ,
+	  ('staff2', '3', 'Add new author')     ,
+	  ('staff4', '1', 'Update country')  	,
+	  ('staff3', '6', 'Add new author')  	,
+	  ('staff1', '5', 'Add new author')  	;
+
+--insert book_update_info data
+insert into book_update_info(username, isbn, old_info, new_info)
+values('staff1', '00100100', 'Eddition 1' ,'Eddition 2')  		       ,
+	  ('staff4', '00200200',null , 'Add new book')  	  			   ,
+	  ('staff3', '00700700', 'price 15' ,'price 15.7')  	 	       ,
+	  ('staff1', '00500500', 'Eddition 1' ,'Eddition 2') 			   ,
+	  ('staff2', '00800800', 'publish_year 2012' ,'publish_year 2013') ;
+	       		      
